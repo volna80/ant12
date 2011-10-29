@@ -18,7 +18,7 @@ struct Square
     {
         isVisible = isWater = isHill = isFood = 0;
         ant = hillPlayer = -1;
-        pheromone = 0;
+        pheromone = 1;
     };
 
     //resets the information for the square except water information
@@ -27,7 +27,7 @@ struct Square
         isVisible = 0;
         isHill = 0;
         isFood = 0;
-        ant = hillPlayer -1;
+        ant = hillPlayer = -1;
         deadAnts.clear();
     };
 };

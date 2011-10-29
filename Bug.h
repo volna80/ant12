@@ -2,9 +2,10 @@
 #define BUG_H_
 
 #include <fstream>
+#include <math.h>
 
 #ifndef DEBUG
-    //#define DEBUG
+//    #define DEBUG
 #endif
 
 /*

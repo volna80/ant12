@@ -37,6 +37,7 @@ struct State
     double loadtime, turntime;
     std::vector<double> scores;
     bool gameover;
+    long long seed;
 
     std::vector<std::vector<Square> > grid;
     std::vector<Location> myAnts, enemyAnts, myHills, enemyHills, food;

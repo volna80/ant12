@@ -16,7 +16,7 @@ struct Bot
 
     Bot();
 
-    double calcDesirability(Location l); //calculate a desirability of move to this location
+    double calcDesirability(const Location &l); //calculate a desirability of move to this location
 
     void playGame();    //plays a single game of Ants
 

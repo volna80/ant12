@@ -195,6 +195,11 @@ istream& operator>>(istream &is, State &state)
                 state.timer.start();
                 break;
             }
+            else if(inputType == "player_seed"){
+                is >> state.seed;
+                break;
+            }
+
             else    //unknown line
                 getline(is, junk);
         }
