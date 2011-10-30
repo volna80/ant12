@@ -84,6 +84,7 @@ void State::updateVisionInformation()
 
         std::vector<std::vector<bool> > visited(rows, std::vector<bool>(cols, 0));
         grid[sLoc.row][sLoc.col].isVisible = 1;
+        grid[sLoc.row][sLoc.col].isLand = 1;
         visited[sLoc.row][sLoc.col] = 1;
 
         while(!locQueue.empty())
@@ -99,6 +100,12 @@ void State::updateVisionInformation()
                 {
                     grid[nLoc.row][nLoc.col].isVisible = 1;
                     locQueue.push(nLoc);
+
+                    if(grid[nLoc.row][nLoc.col].isWater){
+                        grid[nLoc.row][nLoc.col].isLand = 0;
+                    } else {
+                        grid[nLoc.row][nLoc.col].isLand = 1;
+                    }
                 }
                 visited[nLoc.row][nLoc.col] = 1;
             }
@@ -268,3 +275,9 @@ istream& operator>>(istream &is, State &state)
 
     return is;
 };
+
+
+Bug& operator<<(Bug &os, const Location &state) {
+        os << "loc[" << state.row << ":" << state.col << "]";
+        return os;
+}

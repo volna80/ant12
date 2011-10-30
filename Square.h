@@ -12,13 +12,16 @@ struct Square
     int ant, hillPlayer;
     std::vector<int> deadAnts;
 
+    int isLand; // -1 - unknown, 0 - no, 1 - yes
+
     double pheromone;
 
     Square()
     {
         isVisible = isWater = isHill = isFood = 0;
         ant = hillPlayer = -1;
-        pheromone = 1;
+        pheromone = 0.1;
+        isLand = -1;
     };
 
     //resets the information for the square except water information

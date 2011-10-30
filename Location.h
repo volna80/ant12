@@ -1,6 +1,9 @@
 #ifndef LOCATION_H_
 #define LOCATION_H_
 
+#include "Bug.h"
+
+
 /*
     struct for representing locations in the grid.
 */
@@ -18,6 +21,22 @@ struct Location
         row = r;
         col = c;
     };
+
+
+    bool operator==(const Location &other) const {
+        return row == other.row && col == other.col;
+    }
+
+    bool operator!=(const Location &other) const {
+        return row != other.row || col != other.col;
+    }
+
+
+
 };
+
+Bug& operator<<(Bug &os, const Location &state) ;
+
+
 
 #endif //LOCATION_H_

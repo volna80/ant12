@@ -27,16 +27,108 @@ void Bot::playGame()
     while(cin >> state)
     {
         state.updateVisionInformation();
+
+        state.bug << "turn " << state.turn << ":" << endl;
+        state.bug << state << endl;
+
+        updatePheromone();
         makeMoves();
         endTurn();
     }
 };
 
+void Bot::findPath(Location &loc, vector<vector<int> > &graph){
+    //add pheromone to a loc
+    state.grid[loc.row][loc.col].pheromone = 1000;
+    state.bug << "add pheromone at " << loc << endl;
+    int time = graph[loc.row][loc.col];
+    if(time == 0){
+        //finish
+        state.bug << "finish at " << loc << endl;
+        return;
+    }
+    time--;
+    for(int d=0; d < TDIRECTIONS; d++){
+        Location nLoc = state.getLocation(loc,d);
+        if(graph[nLoc.row][nLoc.col] == time){
+            findPath(nLoc,graph);
+            return;
+        }
+    }
+};
+
+
+void Bot::updatePheromone(){
+    if(state.turn % 25 == 0){
+        //init first paths
+        for(vector<Location>::iterator food = state.food.begin(); food != state.food.end(); ++food) {
+            state.bug << "look a path for " << *food << endl;
+
+            vector<vector<int> > graph = vector<vector<int> >(state.rows,vector<int>(state.cols,-1));
+
+            vector<Location> newFront;
+            vector<Location> oldFront;
+
+            int time = 0;
+
+            //step one: init
+            graph[food->row][food->col] = time;
+            oldFront.push_back(*food);
+
+            while(true){
+                time++;
+                //update near vertex
+                state.bug << "1# update near vertex " << endl;
+                for(vector<Location>::iterator currentVertex = oldFront.begin(); currentVertex != oldFront.end(); ++currentVertex){
+                    for(int d=0; d<TDIRECTIONS; d++){
+                        Location loc = state.getLocation( *currentVertex, d);
+                        if(graph[loc.row][loc.col] == -1 && (state.grid[loc.row][loc.col].isLand == 1)){
+                            graph[loc.row][loc.col] = time;
+                            newFront.push_back(loc);
+                            state.bug << "new front= " << loc << endl;
+                        }
+                    }
+                }
+
+                if(newFront.size() == 0){
+                    //couldn't find a path
+                    state.bug << "couldn't find a path" << endl;
+                    break;
+                }
+
+
+                for(vector<Location>::iterator myHill = state.myHills.begin(); myHill != state.myHills.end(); ++myHill){
+                    //Location * p = find(newFront.begin(), newFront.end(), *myHill);
+                    for(int i=0; i < newFront.size(); i++){
+                        if(*myHill == newFront[i]){
+                            //found a path
+                            //add pheromone on a path
+
+                            findPath(*myHill, graph);
+
+                            goto pathFound;
+                        }
+                    }
+                }
+
+                //next round
+                state.bug << "swap for next round " << endl;
+                oldFront = newFront;
+                newFront.clear();
+            }
+
+            pathFound:
+            state.bug << "found a path" <<endl;
+
+        }
+    }
+
+}
+
+
 //makes the bots moves for the turn
 void Bot::makeMoves()
 {
-    state.bug << "turn " << state.turn << ":" << endl;
-    state.bug << state << endl;
 
     //picks out moves for each ant
     for(int ant=0; ant<(int)state.myAnts.size(); ant++)
@@ -112,11 +204,11 @@ double Bot::calcDesirability(const Location &l){
 //            state.bug << "check r:" <<  nLoc.row << ", c:" << nLoc.col << ", sq=" << square << endl;
 
             if(square->isFood){
-                d += 4 / state.distance(l, nLoc);
+                d += W_FOOD / state.distance(l, nLoc);
             }
 
             if(square->isHill && square->hillPlayer != 0) {
-                d += 10 / state.distance(l, nLoc);
+                d += W_HILL / state.distance(l, nLoc);
             }
         }
     }
