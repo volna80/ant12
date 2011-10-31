@@ -142,7 +142,7 @@ void Bot::makeMoves()
             Location loc = state.getLocation(state.myAnts[ant], d);
             Square * square = &state.grid[loc.row][loc.col];
 
-            if(square->isWater || square->ant != -1 || square->isHill) {
+            if(square->isWater || square->ant != -1 || (square->isHill && square->hillPlayer !=0)) {
                 //state.bug << "couldn't move to " << d << endl;
                 //state.bug << "loc:" << loc.row << ":" << loc.col << "; w:" << square.isWater << "; h:" << square.isHill << "; a:" << square.ant << endl;
                 continue;
