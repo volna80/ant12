@@ -25,7 +25,11 @@ struct Bot
 
     void makeMoves();   //makes moves for a single turn
     void endTurn();     //indicates to the engine that it has made its moves
-    void updatePheromone(); //update paths for ants
+
+    void updatePheromone(); //update paths for ants from all food&enemy hill's locations
+    //find a path from the loc to the nearest hill and add pheromone on a path
+    //we use a wave pathfinder algorithm
+    void findPath(Location &loc);
     void findPath(Location &loc, std::vector<std::vector<int> > &graph);
 };
 
