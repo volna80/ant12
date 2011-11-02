@@ -19,7 +19,7 @@ struct Bot
 
     Bot();
 
-    double calcDesirability(const Location &l); //calculate a desirability of move to this location
+    double calcDesirability(const Location &l, int direction); //calculate a desirability of move in this direction from the location
 
     void playGame();    //plays a single game of Ants
 
@@ -27,10 +27,13 @@ struct Bot
     void endTurn();     //indicates to the engine that it has made its moves
 
     void updatePheromone(); //update paths for ants from all food&enemy hill's locations
+    //void addPheromone(Location const &loc);
+
+
     //find a path from the loc to the nearest hill and add pheromone on a path
     //we use a wave pathfinder algorithm
-    void findPath(Location &loc);
-    void findPath(Location &loc, std::vector<std::vector<int> > &graph);
+    void findPath(Location const &from, std::vector<Location> const &to, void (*f)(const Location&, State&));
+    void findPath(Location const &loc, std::vector<std::vector<int> > &graph, void (*f)(const Location&, State&));
 };
 
 #endif //BOT_H_

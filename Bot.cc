@@ -37,56 +37,42 @@ void Bot::playGame()
     }
 };
 
-void Bot::findPath(Location &loc, vector<vector<int> > &graph)
-{
-    //add pheromone to a loc
+void addPheromone(Location const &loc, State &state){
     state.grid[loc.row][loc.col].pheromone = 1000;
-    state.bug << "add pheromone at " << loc << endl;
-    int time = graph[loc.row][loc.col];
-    if(time == 0)
-    {
-        //finish
-        state.bug << "finish at " << loc << endl;
-        return;
-    }
-    time--;
-    for(int d=0; d < TDIRECTIONS; d++)
-    {
-        Location nLoc = state.getLocation(loc,d);
-        if(graph[nLoc.row][nLoc.col] == time)
-        {
-            findPath(nLoc,graph);
-            return;
-        }
-    }
-};
+    //state.bug << "add pheromone at " << loc << endl;
+}
+
 
 
 void Bot::updatePheromone()
 {
-    if(state.turn % 25 == 0)
+    //if(state.turn % 25 == 0)
     {
         //init first paths
         for(vector<Location>::iterator food = state.food.begin(); food != state.food.end(); ++food)
         {
             state.bug << "look a path for " << *food << endl;
-            findPath(*food);
+            findPath(*food, state.myHills, addPheromone);
         }
 
-        for(vector<Location>::iterator hill = state.enemyHills.begin(); hill != state.enemyHills.end(); ++hill){
+        for(vector<Location>::iterator hill = state.enemyHills.begin(); hill != state.enemyHills.end(); ++hill)
+        {
             state.bug << "look a path for " << *hill << endl;
-            findPath(*hill);
+            findPath(*hill, state.myHills, addPheromone);
         }
     }
 
     //decrease pheromone
     for(int row=0; row<state.rows; row++)
-        for(int col=0; col<state.cols; col++){
-            if(state.grid[row][col].pheromone != 0.1){
-                state.grid[row][col].pheromone -= 20;
+        for(int col=0; col<state.cols; col++)
+        {
+            if(state.grid[row][col].pheromone != 1)
+            {
+                state.grid[row][col].pheromone -= 25;
             }
-            if(state.grid[row][col].pheromone < 1){
-                state.grid[row][col].pheromone=0.1;
+            if(state.grid[row][col].pheromone < 1)
+            {
+                state.grid[row][col].pheromone=1;
             }
 
         }
@@ -94,71 +80,6 @@ void Bot::updatePheromone()
 
 }
 
-void Bot::findPath(Location &base)
-{
-    vector<vector<int> > graph = vector<vector<int> >(state.rows,vector<int>(state.cols,-1));
-
-    vector<Location> newFront;
-    vector<Location> oldFront;
-
-    int time = 0;
-
-    //step one: init
-    graph[base.row][base.col] = time;
-    oldFront.push_back(base);
-
-    while(true)
-    {
-        time++;
-        //update near vertex
-        state.bug << "1# update near vertex " << endl;
-        for(vector<Location>::iterator currentVertex = oldFront.begin(); currentVertex != oldFront.end(); ++currentVertex)
-        {
-            for(int d=0; d<TDIRECTIONS; d++)
-            {
-                Location loc = state.getLocation( *currentVertex, d);
-                if(graph[loc.row][loc.col] == -1 && (state.grid[loc.row][loc.col].isLand == 1))
-                {
-                    graph[loc.row][loc.col] = time;
-                    newFront.push_back(loc);
-                    state.bug << "new front= " << loc << endl;
-                }
-            }
-        }
-
-        if(newFront.size() == 0)
-        {
-            //couldn't find a path
-            state.bug << "couldn't find a path" << endl;
-            break;
-        }
-
-
-        for(vector<Location>::iterator myHill = state.myHills.begin(); myHill != state.myHills.end(); ++myHill)
-        {
-            //Location * p = find(newFront.begin(), newFront.end(), *myHill);
-            for(int i=0; i < newFront.size(); i++)
-            {
-                if(*myHill == newFront[i])
-                {
-                    //found a path
-                    //add pheromone on a path
-
-                    state.bug << "found a path" <<endl;
-
-                    findPath(*myHill, graph);
-
-                    return;
-                }
-            }
-        }
-
-        //next round
-        state.bug << "swap for next round " << endl;
-        oldFront = newFront;
-        newFront.clear();
-    }
-}
 
 
 //makes the bots moves for the turn
@@ -177,15 +98,17 @@ void Bot::makeMoves()
             Location loc = state.getLocation(state.myAnts[ant], d);
             Square * square = &state.grid[loc.row][loc.col];
 
-            if(square->isWater || square->ant == 0 ) //|| (square->isHill && square->hillPlayer ==0))
+            if(square->isWater || square->ant == 0 || (square->isHill && square->hillPlayer ==0) || square->isDeadlock == 1)
             {
                 //state.bug << "couldn't move to " << d << endl;
                 //state.bug << "loc:" << loc.row << ":" << loc.col << "; w:" << square.isWater << "; h:" << square.isHill << "; a:" << square.ant << endl;
                 continue;
             }
 
-            w[d] = pow(square->pheromone, COMMINITY) * pow(calcDesirability(loc), GREEDY);
-            state.bug <<  "w[" << d << "]=" << w[d] << "; ";
+            int phe = square->pheromone;
+            int des = calcDesirability(state.myAnts[ant], d);
+            w[d] = pow(phe, COMMINITY) * pow(des, GREEDY);
+            state.bug <<  "pheromone=" << phe << "; desire=" << des << "; w[" << d << "]=" << w[d] << endl;
             sumW += w[d];
 
             //    if(!state.grid[loc.row][loc.col].isWater)
@@ -197,7 +120,7 @@ void Bot::makeMoves()
 
         }
 
-        state.bug << "sumW=" << sumW << endl;
+        // state.bug << "sumW=" << sumW << endl;
 
 
         if(sumW == 0)
@@ -231,9 +154,13 @@ void Bot::makeMoves()
     state.bug << "time taken: " << state.timer.getTime() << "ms" << endl << endl;
 };
 
-double Bot::calcDesirability(const Location &l)
+double Bot::calcDesirability(const Location &current, int direction)
 {
     double d = 1;
+
+
+    //new location
+    Location l = state.getLocation(current, direction);
 
 
     for(int c= 0 - state.viewradius; c <= state.viewradius; c++)
@@ -252,13 +179,21 @@ double Bot::calcDesirability(const Location &l)
 
             if(square->isHill && square->hillPlayer != 0)
             {
-                if(c==0 && r==0){
+                if(c==0 && r==0)
+                {
                     d += W_HILL;
-                } else{
+                }
+                else
+                {
                     d += W_HILL / state.distance(l, nLoc);
                 }
             }
         }
+    }
+
+    //go on in the same direction is more prefereable
+    if(state.lastTurn[current.row][current.col] == direction){
+        d += 500;
     }
 
 

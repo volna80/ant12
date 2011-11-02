@@ -13,6 +13,10 @@ struct Square
     std::vector<int> deadAnts;
 
     int isLand; // -1 - unknown, 0 - no, 1 - yes
+    // example
+    //   ###
+    // ### ###
+    int isDeadlock; //-1 - unknown, 0 - no, 1 - yes // this square has only one open direction
 
     double pheromone;
 
@@ -20,8 +24,9 @@ struct Square
     {
         isVisible = isWater = isHill = isFood = 0;
         ant = hillPlayer = -1;
-        pheromone = 0.1;
+        pheromone = 1;
         isLand = -1;
+        isDeadlock = -1;
     };
 
     //resets the information for the square except water information

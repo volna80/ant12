@@ -42,6 +42,8 @@ struct State
     std::vector<std::vector<Square> > grid;
     std::vector<Location> myAnts, enemyAnts, myHills, enemyHills, food;
 
+    std::vector<std::vector<int> > lastTurn; //remember a last directrion
+
     Timer timer;
     Bug bug;
 
@@ -59,6 +61,7 @@ struct State
     double distance(const Location &loc1, const Location &loc2);
     Location getLocation(const Location &startLoc, int direction);
 
+    void updateDeadlock();
     void updateVisionInformation();
 };
 

@@ -20,6 +20,7 @@ State::~State()
 void State::setup()
 {
     grid = vector<vector<Square> >(rows, vector<Square>(cols, Square()));
+    lastTurn = vector<vector<int> >(rows, vector<int>(cols, 0));
 };
 
 //resets all non-water squares to land and clears the bots ant vector
@@ -44,6 +45,10 @@ void State::makeMove(const Location &loc, int direction)
     Location nLoc = getLocation(loc, direction);
     grid[nLoc.row][nLoc.col].ant = grid[loc.row][loc.col].ant;
     grid[loc.row][loc.col].ant = -1;
+    //remember from what direction we come
+    lastTurn[nLoc.row][nLoc.col] = direction;
+    lastTurn[loc.row][loc.col] = 0;
+
 };
 
 //returns the euclidean distance between two locations with the edges wrapped
@@ -111,7 +116,47 @@ void State::updateVisionInformation()
             }
         }
     }
+
+
+    //every 20 turn, check deadlock areas;
+    //if((turn % 20 == 0) {
+    updateDeadlock();
+    //}
 };
+
+
+void State::updateDeadlock()
+{
+    for(int r=0; r < rows; r++)
+    {
+        for(int c=0; c < cols; c++)
+        {
+            if(grid[r][c].isDeadlock == -1 && grid[r][c].isLand == 1)
+            {
+                int free = 0; //number of free directions
+                Location loc = Location(r,c);
+                for(int d=0; d<TDIRECTIONS; d++)
+                {
+                    Location nLoc = getLocation(loc, d);
+                    if(grid[nLoc.row][nLoc.col].isLand == 1){
+                        free++;
+                    } else if(grid[nLoc.row][nLoc.col].isLand == -1){
+                        free = -1;
+                        break;
+                    }
+                }
+
+                if(free == -1){
+                    //do nothing
+                } else if(free == 1){
+                    grid[r][c].isDeadlock = 1;
+                } else {
+                    grid[r][c].isDeadlock = 0;
+                }
+            }
+        }
+    }
+}
 
 /*
     This is the output function for a state. It will add a char map
@@ -133,6 +178,8 @@ ostream& operator<<(ostream &os, const State &state)
                 os << (char)('A' + state.grid[row][col].hillPlayer);
             else if(state.grid[row][col].ant >= 0)
                 os << (char)('a' + state.grid[row][col].ant);
+            else if(state.grid[row][col].isDeadlock == 1)
+                os << 'x';
             else if(state.grid[row][col].isVisible)
                 os << '.';
             else
