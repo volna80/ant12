@@ -68,6 +68,12 @@ Location State::getLocation(const Location &loc, int direction)
                      (loc.col + DIRECTIONS[direction][1] + cols) % cols );
 };
 
+Location State::getLocation(const Location &loc, int direction, int distance)
+{
+    return Location( (loc.row + DIRECTIONS[direction][0] * distance + rows) % rows,
+                     (loc.col + DIRECTIONS[direction][1] * distance + cols) % cols );
+};
+
 /*
     This function will update update the lastSeen value for any squares currently
     visible by one of your live ants.

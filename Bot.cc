@@ -37,7 +37,8 @@ void Bot::playGame()
     }
 };
 
-void addPheromone(Location const &loc, State &state){
+void addPheromone(Location const &loc, State &state)
+{
     state.grid[loc.row][loc.col].pheromone = FOOD_PHEROMONE;
     //state.bug << "add pheromone at " << loc << endl;
 }
@@ -132,16 +133,16 @@ void Bot::makeMoves()
         double p[TDIRECTIONS] = {0,0,0,0}; //probability
         int r = rand() % 1000;
 
-        state.bug << "r:" << r << "; ";
+        //state.bug << "r:" << r << "; ";
         double aggr = 0;
 
         for(int d=0; d < TDIRECTIONS ; d++)
         {
             aggr += (w[d] / sumW);
-            state.bug << "p" << d << "=" << (1000 * aggr) << "; ";
+            //state.bug << "p" << d << "=" << (1000 * aggr) << "; ";
             if(aggr * 1000 > ( r - 1))
             {
-                state.bug << "makeMove: " << ant << ":" << CDIRECTIONS[d] << endl;
+                state.bug << "move to [" << CDIRECTIONS[d] << "]" << endl;
                 state.makeMove(state.myAnts[ant], d);
                 break;
             }
@@ -157,25 +158,75 @@ void Bot::makeMoves()
 
 int Bot::calcDesirability(const Location &current, int direction)
 {
+
+
     int d = 1;
 
-
-    //new location
-    Location l = state.getLocation(current, direction);
-
-
-    for(int c= 0 - state.viewradius; c <= state.viewradius; c++)
+    //go on in the same direction is more prefereable
+    if(state.lastTurn[current.row][current.col] == direction)
     {
-        for(int r= 0-state.viewradius; r<= state.viewradius; r++)
-        {
-            Location nLoc = Location((l.row + r + state.rows) % state.rows, (l.col + c + state.cols) % state.cols);
+        d += D_SAME_DIRECTION;
+        state.bug << "+dir[" << D_SAME_DIRECTION << "]; ";
+    }
+    else if(state.lastTurn[current.row][current.col] == (direction + 2) % TDIRECTIONS) //180%
+    {
+        //nothing
+    }
+    else
+    {
+        //90%
+        d += D_SAME_DIRECTION / 4;
+        state.bug << "+dir[" << (D_SAME_DIRECTION / 4 ) << "]; ";
+    }
 
-            Square * square = &state.grid[nLoc.row][nLoc.col];
+    for(int deep = 0; deep < 5 ; deep++)
+    {
+        Location ll = state.getLocation(current, direction, deep);
+        if(state.grid[ll.row][ll.col].isWater){
+            break;
+        }
+
+        for(int j=-deep; j < deep ; j++)
+        {
+            int r = current.row;
+            int c = current.col;
+            if(direction = NORTH)
+            {
+                r -= deep;
+                c += j;
+            }
+            else if(direction = EAST)
+            {
+                r = j;
+                c += deep;
+            }
+            else if(direction = SOUTH)
+            {
+                r += deep;
+                c += j;
+            }
+            else     //direction WEST
+            {
+                r += j;
+                c -= deep;
+            }
+            r = (r + state.rows) % state.rows;
+            c = (c + state.cols) % state.cols;
+
+            Location l = Location(r,c);
+
+            Square * square = &state.grid[l.row][l.col];
+
 //            state.bug << "check r:" <<  nLoc.row << ", c:" << nLoc.col << ", sq=" << square << endl;
 
             if(square->isFood)
             {
-                int tmp = W_FOOD / state.distance(l, nLoc);
+                int tmp;
+                if(deep == 0){
+                    tmp = W_FOOD;
+                } else {
+                    tmp = W_FOOD/ deep;
+                }
                 d += tmp;
                 state.bug << "+food[" << tmp << "]; ";
             }
@@ -183,25 +234,30 @@ int Bot::calcDesirability(const Location &current, int direction)
             if(square->isHill && square->hillPlayer != 0)
             {
                 int tmp;
-                if(c==0 && r==0)
+                if(deep == 0)
                 {
                     tmp = W_HILL;
                 }
                 else
                 {
-                    tmp = W_HILL / state.distance(l, nLoc);
+                    tmp = W_HILL / deep;
                 }
                 d += tmp;
                 state.bug << "+hill[" << tmp << "]";
             }
+
+            if(square->isLand == -1)
+            {
+                d += W_EXPLORATION;
+                state.bug << "+expl[" << W_EXPLORATION << "]";
+            }
         }
     }
 
-    //go on in the same direction is more prefereable
-    if(state.lastTurn[current.row][current.col] == direction){
-        d += D_SAME_DIRECTION;
-        state.bug << "+dir[" << D_SAME_DIRECTION << "]; ";
-    }
+
+    //new location
+    //Location l = state.getLocation(current, direction);
+
 
     state.bug << endl;
 
