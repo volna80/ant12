@@ -181,7 +181,21 @@ ostream& operator<<(ostream &os, const State &state)
             else if(state.grid[row][col].isDeadlock == 1)
                 os << 'x';
             else if(state.grid[row][col].isVisible)
-                os << '.';
+            {
+                if(state.grid[row][col].pheromone > 750)
+                {
+                    os << '!';
+                }
+                else if(state.grid[row][col].pheromone > 1)
+                {
+                    os << ' ';
+                }
+                else
+                {
+                    os << '.';
+                }
+
+            }
             else
                 os << '?';
         }

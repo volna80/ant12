@@ -66,7 +66,7 @@ void Bot::findPath(Location const &from, vector<Location> const &to, void (*f)(c
         if(newFront.size() == 0)
         {
             //couldn't find a path
-            state.bug << "couldn't find a path" << endl;
+            //state.bug << "couldn't find a path" << endl;
             break;
         }
 
@@ -81,7 +81,7 @@ void Bot::findPath(Location const &from, vector<Location> const &to, void (*f)(c
                     //found a path
                     //add pheromone on a path
 
-                    state.bug << "found a path" <<endl;
+                    //state.bug << "found a path" <<endl;
 
                     findPath(*target, graph, f);
 

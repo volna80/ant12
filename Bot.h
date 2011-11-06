@@ -7,8 +7,13 @@
 
 const double GREEDY = 0.7;
 const double COMMINITY = 1 - GREEDY;
-const double W_FOOD = 1000;
-const double W_HILL = 10000;
+
+const double W_FOOD = 1000; //weigh if we see food
+const double W_HILL = 10000; // + if we see enemy hill
+
+const int D_SAME_DIRECTION = 2500;
+const int FOOD_PHEROMONE = 1000; //add to a path from hill to a food
+
 
 /*
     This struct represents your bot in the game of Ants
@@ -19,7 +24,7 @@ struct Bot
 
     Bot();
 
-    double calcDesirability(const Location &l, int direction); //calculate a desirability of move in this direction from the location
+    int calcDesirability(const Location &l, int direction); //calculate a desirability of move in this direction from the location
 
     void playGame();    //plays a single game of Ants
 

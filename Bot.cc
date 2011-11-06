@@ -38,7 +38,7 @@ void Bot::playGame()
 };
 
 void addPheromone(Location const &loc, State &state){
-    state.grid[loc.row][loc.col].pheromone = 1000;
+    state.grid[loc.row][loc.col].pheromone = FOOD_PHEROMONE;
     //state.bug << "add pheromone at " << loc << endl;
 }
 
@@ -51,13 +51,13 @@ void Bot::updatePheromone()
         //init first paths
         for(vector<Location>::iterator food = state.food.begin(); food != state.food.end(); ++food)
         {
-            state.bug << "look a path for " << *food << endl;
+            //state.bug << "look a path for " << *food << endl;
             findPath(*food, state.myHills, addPheromone);
         }
 
         for(vector<Location>::iterator hill = state.enemyHills.begin(); hill != state.enemyHills.end(); ++hill)
         {
-            state.bug << "look a path for " << *hill << endl;
+            //state.bug << "look a path for " << *hill << endl;
             findPath(*hill, state.myHills, addPheromone);
         }
     }
@@ -89,6 +89,7 @@ void Bot::makeMoves()
     //picks out moves for each ant
     for(int ant=0; ant<(int)state.myAnts.size(); ant++)
     {
+        state.bug << "start turn ant[" << ant << "]" << endl;
 
         double w[TDIRECTIONS] = {0,0,0,0}; //weights of every path
         double sumW = 0;
@@ -108,7 +109,7 @@ void Bot::makeMoves()
             int phe = square->pheromone;
             int des = calcDesirability(state.myAnts[ant], d);
             w[d] = pow(phe, COMMINITY) * pow(des, GREEDY);
-            state.bug <<  "pheromone=" << phe << "; desire=" << des << "; w[" << d << "]=" << w[d] << endl;
+            state.bug << CDIRECTIONS[d] << " phe=" << phe << "; des=" << des << "; w=" << w[d] << endl;
             sumW += w[d];
 
             //    if(!state.grid[loc.row][loc.col].isWater)
@@ -140,7 +141,7 @@ void Bot::makeMoves()
             state.bug << "p" << d << "=" << (1000 * aggr) << "; ";
             if(aggr * 1000 > ( r - 1))
             {
-                state.bug << "makeMove: " << ant << ":" << d << endl;
+                state.bug << "makeMove: " << ant << ":" << CDIRECTIONS[d] << endl;
                 state.makeMove(state.myAnts[ant], d);
                 break;
             }
@@ -154,9 +155,9 @@ void Bot::makeMoves()
     state.bug << "time taken: " << state.timer.getTime() << "ms" << endl << endl;
 };
 
-double Bot::calcDesirability(const Location &current, int direction)
+int Bot::calcDesirability(const Location &current, int direction)
 {
-    double d = 1;
+    int d = 1;
 
 
     //new location
@@ -174,28 +175,35 @@ double Bot::calcDesirability(const Location &current, int direction)
 
             if(square->isFood)
             {
-                d += W_FOOD / state.distance(l, nLoc);
+                int tmp = W_FOOD / state.distance(l, nLoc);
+                d += tmp;
+                state.bug << "+food[" << tmp << "]; ";
             }
 
             if(square->isHill && square->hillPlayer != 0)
             {
+                int tmp;
                 if(c==0 && r==0)
                 {
-                    d += W_HILL;
+                    tmp = W_HILL;
                 }
                 else
                 {
-                    d += W_HILL / state.distance(l, nLoc);
+                    tmp = W_HILL / state.distance(l, nLoc);
                 }
+                d += tmp;
+                state.bug << "+hill[" << tmp << "]";
             }
         }
     }
 
     //go on in the same direction is more prefereable
     if(state.lastTurn[current.row][current.col] == direction){
-        d += 500;
+        d += D_SAME_DIRECTION;
+        state.bug << "+dir[" << D_SAME_DIRECTION << "]; ";
     }
 
+    state.bug << endl;
 
     return d;
 }
