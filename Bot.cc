@@ -182,25 +182,26 @@ int Bot::calcDesirability(const Location &current, int direction)
     for(int deep = 0; deep < 5 ; deep++)
     {
         Location ll = state.getLocation(current, direction, deep);
+
         if(state.grid[ll.row][ll.col].isWater){
             break;
         }
 
-        for(int j=-deep; j < deep ; j++)
+        for(int j=-deep; j <= deep ; j++)
         {
             int r = current.row;
             int c = current.col;
-            if(direction = NORTH)
+            if(direction == NORTH)
             {
                 r -= deep;
                 c += j;
             }
-            else if(direction = EAST)
+            else if(direction == EAST)
             {
-                r = j;
+                r += j;
                 c += deep;
             }
-            else if(direction = SOUTH)
+            else if(direction == SOUTH)
             {
                 r += deep;
                 c += j;
@@ -243,13 +244,13 @@ int Bot::calcDesirability(const Location &current, int direction)
                     tmp = W_HILL / deep;
                 }
                 d += tmp;
-                state.bug << "+hill[" << tmp << "]";
+                state.bug << "+hill[" << tmp << "]; ";
             }
 
             if(square->isLand == -1)
             {
                 d += W_EXPLORATION;
-                state.bug << "+expl[" << W_EXPLORATION << "]";
+                state.bug << "+expl[" << W_EXPLORATION << "]; ";
             }
         }
     }
