@@ -5,7 +5,7 @@
 #include <math.h>
 
 #ifndef DEBUG
-    #define DEBUG
+//    #define DEBUG
 #endif
 
 /*
