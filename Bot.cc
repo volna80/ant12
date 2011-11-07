@@ -130,21 +130,52 @@ void Bot::makeMoves()
             continue;
         }
 
-        double p[TDIRECTIONS] = {0,0,0,0}; //probability
-        int r = rand() % 1000;
+        //make a decision
 
-        //state.bug << "r:" << r << "; ";
-        double aggr = 0;
-
-        for(int d=0; d < TDIRECTIONS ; d++)
+        if(state.turn % 5 == 0)
         {
-            aggr += (w[d] / sumW);
-            //state.bug << "p" << d << "=" << (1000 * aggr) << "; ";
-            if(aggr * 1000 > ( r - 1))
+            //random aproach
+            double p[TDIRECTIONS] = {0,0,0,0}; //probability
+            int r = rand() % 1000;
+
+            //state.bug << "r:" << r << "; ";
+            double aggr = 0;
+
+            for(int d=0; d < TDIRECTIONS ; d++)
             {
-                state.bug << "move to [" << CDIRECTIONS[d] << "]" << endl;
-                state.makeMove(state.myAnts[ant], d);
-                break;
+                aggr += (w[d] / sumW);
+                //state.bug << "p" << d << "=" << (1000 * aggr) << "; ";
+                if(aggr * 1000 > ( r - 1))
+                {
+                    state.bug << "move to [" << CDIRECTIONS[d] << "]" << endl;
+                    state.makeMove(state.myAnts[ant], d);
+                    break;
+                }
+            }
+
+        }
+        else
+        {
+            //look for max
+            int mov = -1;
+            double maxP = 0;
+            for(int i = 0; i < TDIRECTIONS; i++)
+            {
+                if(w[i] > 0 && w[i] > maxP)
+                {
+                    mov = i;
+                    maxP = w[i];
+                }
+            }
+
+            if(mov != -1)
+            {
+                state.bug << "move to [" << CDIRECTIONS[mov] << "]" << endl;
+                state.makeMove(state.myAnts[ant], mov);
+            }
+            else
+            {
+                state.bug << "stay on the same place " << endl;
             }
         }
 
@@ -183,7 +214,8 @@ int Bot::calcDesirability(const Location &current, int direction)
     {
         Location ll = state.getLocation(current, direction, deep);
 
-        if(state.grid[ll.row][ll.col].isWater){
+        if(state.grid[ll.row][ll.col].isWater)
+        {
             break;
         }
 
@@ -223,9 +255,12 @@ int Bot::calcDesirability(const Location &current, int direction)
             if(square->isFood)
             {
                 int tmp;
-                if(deep == 0){
+                if(deep == 0)
+                {
                     tmp = W_FOOD;
-                } else {
+                }
+                else
+                {
                     tmp = W_FOOD/ deep;
                 }
                 d += tmp;
