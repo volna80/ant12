@@ -22,6 +22,10 @@ void Bot::playGame()
 
     srand( state.seed);
 
+    state.bug << "attackradius=" << state.attackradius << endl;
+    state.bug << "viewradius=" << state.viewradius << endl;
+    state.bug << "spawnradius=" << state.spawnradius << endl;
+
 
     //continues making moves while the game is not over
     while(cin >> state)
@@ -37,10 +41,14 @@ void Bot::playGame()
     }
 };
 
-void addPheromone(Location const &loc, State &state)
+void addFoodPheromone(Location const &loc, State &state)
 {
     state.grid[loc.row][loc.col].pheromone = FOOD_PHEROMONE;
-    //state.bug << "add pheromone at " << loc << endl;
+}
+
+void addHillPheromone(Location const &loc, State &state)
+{
+    state.grid[loc.row][loc.col].pheromone = HILL_PHEROMONE;
 }
 
 
@@ -53,13 +61,13 @@ void Bot::updatePheromone()
         for(vector<Location>::iterator food = state.food.begin(); food != state.food.end(); ++food)
         {
             //state.bug << "look a path for " << *food << endl;
-            findPath(*food, state.myHills, addPheromone);
+            findPath(*food, state.myHills, addFoodPheromone);
         }
 
         for(vector<Location>::iterator hill = state.enemyHills.begin(); hill != state.enemyHills.end(); ++hill)
         {
             //state.bug << "look a path for " << *hill << endl;
-            findPath(*hill, state.myHills, addPheromone);
+            findPath(*hill, state.myHills, addHillPheromone);
         }
     }
 
@@ -87,7 +95,16 @@ void Bot::updatePheromone()
 void Bot::makeMoves()
 {
 
-    //picks out moves for each ant
+    //define fighting groups
+    for(int ant=0; ant < (int) state.myAnts.size(); ant++){
+        Location loc = state.myAnts[ant];
+
+    }
+
+    //make moves of fighting groups first
+
+
+    //picks out moves for rest ants
     for(int ant=0; ant<(int)state.myAnts.size(); ant++)
     {
         state.bug << "start turn ant[" << ant << "]" << endl;
