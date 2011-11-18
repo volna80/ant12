@@ -20,7 +20,7 @@ State::~State()
 void State::setup()
 {
     grid = vector<vector<Square> >(rows, vector<Square>(cols, Square()));
-    lastTurn = vector<vector<int> >(rows, vector<int>(cols, 0));
+    lastTurn = vector<vector<int> >(rows, vector<int>(cols, -1));
 };
 
 //resets all non-water squares to land and clears the bots ant vector
