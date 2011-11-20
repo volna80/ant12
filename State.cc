@@ -1,4 +1,5 @@
 #include "State.h"
+#include "BattleArea.h"
 
 using namespace std;
 
@@ -47,7 +48,7 @@ void State::makeMove(const Location &loc, int direction)
     grid[loc.row][loc.col].ant = -1;
     //remember from what direction we come
     lastTurn[nLoc.row][nLoc.col] = direction;
-    lastTurn[loc.row][loc.col] = 0;
+    lastTurn[loc.row][loc.col] = -1;
 
 };
 
@@ -348,3 +349,14 @@ Bug& operator<<(Bug &os, const Location &state) {
         os << "loc[" << state.row << ":" << state.col << "]";
         return os;
 }
+
+Bug& operator<<(Bug &os, const BattleArea &area) {
+    os << "battle[";
+    for(int i =0 ; i < area.myAnts.size(); i++)
+    {
+        os << area.myAnts[i] << ",";
+    }
+    os << "]";
+    return os;
+}
+

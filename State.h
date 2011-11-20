@@ -27,6 +27,8 @@ const int EAST  = 1;
 const int SOUTH = 2;
 const int WEST  = 3;
 
+typedef std::vector<Location> ants_t;
+
 /*
     struct to store current state information
 */

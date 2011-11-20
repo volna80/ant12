@@ -1,7 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <algorithm>
 #include "Bot.h"
+#include "BattleArea.h"
 
 using namespace std;
 
@@ -95,10 +97,88 @@ void Bot::updatePheromone()
 void Bot::makeMoves()
 {
 
-    //define fighting groups
-    for(int ant=0; ant < (int) state.myAnts.size(); ant++){
-        Location loc = state.myAnts[ant];
+    //list of ants which aleady assign to any battle
+    vector<Location> inBattle;
+    vector<BattleArea> battles;
 
+    //define fighting groups\\
+    //vector<Location> copyAnts = vector<Location>(state.myAnts);
+    //vector<Location> copyAnts;
+    vector<Location> copyAnts(state.myAnts);
+
+    for(int ant=0; ant < (int) copyAnts.size(); ant++)
+    {
+        Location loc = copyAnts[ant];
+
+
+        //check that this ant isn't in any battle
+        if(inBattle.size() > 0)
+        {
+            vector<Location>::iterator it2 = std::find(inBattle.begin(), inBattle.end(), loc);
+            if(*it2 == loc)
+            {
+                //next
+                continue;
+            }
+        }
+
+        vector<Location> myAnts;
+        bool hasEnemy = false;
+
+        //check the square
+        for(int r = -5; r <= 5; r++)
+        {
+            for(int c = -5; c <= 5; c++)
+            {
+                if(r == 0 && c ==0)
+                {
+                    continue;
+                }
+                int n_row = (r + loc.row + state.rows) % state.rows;
+                int n_col = (c + loc.col + state.cols) % state.cols;
+
+                if(state.grid[n_row][n_col].ant > 0 )
+                {
+                    hasEnemy = true;
+                }
+                else
+                {
+                    myAnts.push_back(Location(r,c));
+                }
+            }
+        }
+
+        if(hasEnemy)
+        {
+            //create battle
+            BattleArea area;
+            //add you-self
+            myAnts.push_back(loc);
+
+            //check that ants not in another battle
+            for(int i=0; i < (int) myAnts.size(); i++)
+            {
+                Location loc2 = myAnts[i];
+                //if this ant in the state.myAnts. So, it hasn't been assigned to any battle
+                if(state.myAnts.size() > 0)
+                {
+                    vector<Location>::iterator it = find(state.myAnts.begin(), state.myAnts.end(), loc2);
+                    if(* it == loc2)
+                    {
+                        //add ants to the battle
+                        area.myAnts.push_back(loc2);
+                        //remove ants from state.myAnts
+                        state.myAnts.erase(it);
+                        //remember that this ant already is assigned to a battle
+                        inBattle.push_back(loc2);
+                    }
+                }
+
+            }
+
+            state.bug << "created a battle " << area << endl;
+
+        }
     }
 
     //make moves of fighting groups first
@@ -108,6 +188,8 @@ void Bot::makeMoves()
     for(int ant=0; ant<(int)state.myAnts.size(); ant++)
     {
         state.bug << "start turn ant[" << ant << "]" << endl;
+
+        //check that the and isn't in a battle
 
         double w[TDIRECTIONS] = {0,0,0,0}; //weights of every path
         double sumW = 0;
