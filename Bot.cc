@@ -3,7 +3,7 @@
 #include <time.h>
 #include <algorithm>
 #include "Bot.h"
-#include "BattleArea.h"
+
 
 using namespace std;
 
@@ -182,6 +182,61 @@ void Bot::makeMoves()
     }
 
     //make moves of fighting groups first
+    for(int i = 0 ; i < battles.size(); i++)
+    {
+        BattleArea & area = battles[i];
+        // -1 - stay on the same place
+        vector<int> steps = vector<int>(area.myAnts.size(), -1);
+        vector<int> best_step = steps;
+        int max_w = -100; //initial
+        bool lastTurn = false;
+        while( !lastTurn )
+        {
+            //calculate current step
+            int cur_w = calculate_battle_result(area, steps);
+            if(cur_w > max_w)
+            {
+                max_w = cur_w;
+                best_step = steps; //make a copy
+            }
+            //increment steps;
+            for(int j = 0; j < battles.size(); j++)
+            {
+                steps[j]++;
+                if(steps[j] > 3)
+                {
+                    if(j+1 == battles.size())
+                    {
+                        //the end
+                        lastTurn = true;
+                    }
+                    else
+                    {
+                        //return the init value and will increment next move;
+                        steps[j] == -1;
+                    }
+                }
+                else
+                {
+                    break;
+                }
+            }
+        }
+
+        //make moves;
+        for(int ant = 0; ant < area.myAnts.size(); ant++)
+        {
+            Location & loc = area.myAnts[ant];
+            int direction = best_step[ant];
+            if(direction == -1)
+            {
+                //do noting
+                continue;
+            }
+            state.bug << "ant[" << loc << "] move to [" << CDIRECTIONS[direction] << "]" << endl;
+            state.makeMove(loc, direction);
+        }
+    }
 
 
     //picks out moves for rest ants
@@ -285,6 +340,98 @@ void Bot::makeMoves()
 
     state.bug << "time taken: " << state.timer.getTime() << "ms" << endl << endl;
 };
+
+int Bot::calculate_battle_result(const BattleArea &area, const vector<int> &steps)
+{
+    std::vector<std::vector<Square> > grid = state.grid; //make a copy
+
+    //make moves
+    for(int ant=0; area.myAnts.size(); ant++)
+    {
+        const Location & loc = area.myAnts[ant];
+        int direction = steps[ant];
+        if(direction == -1) //TODO magic number
+        {
+            //do nothing
+        }
+        else
+        {
+            Location nLoc = state.getLocation(loc, direction);
+            Square & square = grid[nLoc.row][nLoc.col];
+            if(square.isWater || square.ant == 0 || square.isDeadlock == 1)
+            {
+                return -10000000; //impossible step
+
+            }
+            grid[nLoc.row][nLoc.col].ant = grid[loc.row][loc.col].ant;
+            grid[loc.row][loc.col].ant = -1;
+        }
+    }
+
+    //calculate the battle result
+    int numMyDeadAnts = 0;
+    int numEnemyDeadAnts = 0;
+
+    for(int ant=0; area.myAnts.size(); ant++)
+    {
+        const Location &loc = area.myAnts[ant]; //TODO copy-past
+        int direction = steps[ant];
+        Location nLoc;
+        if(direction == -1)
+        {
+            nLoc = loc;
+        }
+        else
+        {
+            nLoc = state.getLocation(loc,direction);
+        }
+
+        // how to check if an ant dies
+    //for every ant:
+    //    for each enemy in range of ant (using attackadius2):
+    //        if (enemies(of ant) in range of ant) >= (enemies(of enemy) in range of enemy) then
+    //            the ant is marked dead (actual removal is done after all battles are resolved)
+    //            break out of enemy loop
+        vector<Location> enemies_v = enemies(nLoc, grid, grid[nLoc.row][nLoc.col].ant); //list of enemies for the ant
+        for(int enemy = 0; enemies_v.size(); enemy++)
+        {
+            Location & loc_enemy = enemies_v[enemy];
+            if(enemies_v.size() >= enemies(loc_enemy, grid, grid[loc_enemy.row][loc_enemy.col].ant).size())
+            {
+                //we dead
+                numMyDeadAnts ++;
+                break;
+            }
+
+        }
+    }
+
+    return numEnemyDeadAnts - 2 * numMyDeadAnts; //So, I think 2 dead enemies vs 1 dead mine is a good result
+}
+
+//return enemies in range of ant
+vector<Location> Bot::enemies(const Location &ant, const std::vector<std::vector<Square> > grid, int owner)
+{
+    vector<Location> e;
+    for(int r = -state.attackradius; r < state.attackradius; r++)
+    {
+        for(int c = -state.attackradius; c < state.attackradius; c++)
+        {
+            int enemy_row = (r + ant.row + state.rows) % state.rows;
+            int enemy_col = (c + ant.col + state.cols) % state.cols;
+            Location enemy(enemy_row, enemy_col);
+            if(
+               grid[enemy_row][enemy_col].ant != -1 &&
+               grid[enemy_row][enemy_col].ant != owner &&
+               state.distance(ant, enemy) <= state.attackradius)
+            {
+                //ok, it is ant, and it isn't our ant, and it in the attack radius
+                e.push_back(enemy);
+            }
+        }
+    }
+    return e;
+}
 
 int Bot::calcDesirability(const Location &current, int direction)
 {

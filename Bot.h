@@ -3,6 +3,7 @@
 
 #include <vector>
 #include "State.h"
+#include "BattleArea.h"
 
 
 const double GREEDY = 0.5;
@@ -27,6 +28,8 @@ struct Bot
     Bot();
 
     int calcDesirability(const Location &l, int direction); //calculate a desirability of move in this direction from the location
+    int calculate_battle_result(const BattleArea &area, const std::vector<int> &stepsOfAnts);
+    std::vector<Location> enemies(const Location &ant, const std::vector<std::vector<Square> > grid, int owner);
 
     void playGame();    //plays a single game of Ants
 
@@ -40,6 +43,7 @@ struct Bot
     //we use a wave pathfinder algorithm
     void findPath(Location const &from, std::vector<Location> const &to, void (*f)(const Location&, State&));
     void findPath(Location const &loc, std::vector<std::vector<int> > &graph, void (*f)(const Location&, State&));
+
 };
 
 #endif //BOT_H_
