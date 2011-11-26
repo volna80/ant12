@@ -65,6 +65,8 @@ double State::distance(const Location &loc1, const Location &loc2)
 //returns the new location from moving in a given direction with the edges wrapped
 Location State::getLocation(const Location &loc, int direction)
 {
+    if(direction == DONT_MOVE) return loc;
+
     return Location( (loc.row + DIRECTIONS[direction][0] + rows) % rows,
                      (loc.col + DIRECTIONS[direction][1] + cols) % cols );
 };

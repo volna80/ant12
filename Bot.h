@@ -10,12 +10,14 @@ const double GREEDY = 0.5;
 const double COMMINITY = 1 - GREEDY;
 
 const double W_FOOD = 10000; //weigh if we see food
-const double W_HILL = 100000; // + if we see enemy hill
+const double W_HILL = 10000; // + if we see enemy hill
 
 const int D_SAME_DIRECTION = 300;
 const int FOOD_PHEROMONE = 1000; //add to a path from hill to a food
 const int HILL_PHEROMONE = 5000; //hill
 const int W_EXPLORATION = 100;
+
+const int MAX_BATTLE_GROUP = 6;
 
 
 /*
@@ -28,8 +30,19 @@ struct Bot
     Bot();
 
     int calcDesirability(const Location &l, int direction); //calculate a desirability of move in this direction from the location
-    int calculate_battle_result(const BattleArea &area, const std::vector<int> &stepsOfAnts);
+
+    //calculate the result of the battle for the invariant
+    int calculate_battle_result(const BattleArea &area, const std::vector<int> &directions);
+    //iterate your ants and split them to battle groups
+    std::vector<BattleArea> findBattles();
+    //evaluate different variants and move ants in the group
+    void makeMoves(BattleArea area);
+
+    // help functions
+    //it returns all enemies in the attack range
     std::vector<Location> enemies(const Location &ant, const std::vector<std::vector<Square> > grid, int owner);
+    // calculate how many ants will die
+    int getNumberOfDeadAnts(std::vector<Location> ants, const std::vector<int> &directions, std::vector<std::vector<Square> > grid);
 
     void playGame();    //plays a single game of Ants
 
