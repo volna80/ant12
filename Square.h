@@ -21,8 +21,9 @@ struct Square
 
     double pheromone;
 
-    bool enemiesCached ;
     ants_t listOfEnemies; //list of enemies in attack range
+
+    bool hasMoved;
 
     Square()
     {
@@ -31,7 +32,7 @@ struct Square
         pheromone = 1;
         isLand = -1;
         isDeadlock = -1;
-        enemiesCached = false;
+        hasMoved = false;
     };
 
     //resets the information for the square except water information
@@ -43,7 +44,7 @@ struct Square
         ant = hillPlayer = -1;
         deadAnts.clear();
         listOfEnemies.clear();
-        enemiesCached = false;
+        hasMoved = false;
     };
 };
 

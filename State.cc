@@ -41,6 +41,12 @@ void State::reset()
 //outputs move information to the engine
 void State::makeMove(const Location &loc, int direction)
 {
+    if(grid[loc.row][loc.col].hasMoved)
+    {
+        //TODO BUG ???
+        return;
+    }
+
     cout << "o " << loc.row << " " << loc.col << " " << CDIRECTIONS[direction] << endl;
 
     Location nLoc = getLocation(loc, direction);
@@ -49,6 +55,8 @@ void State::makeMove(const Location &loc, int direction)
     //remember from what direction we come
     lastTurn[nLoc.row][nLoc.col] = direction;
     lastTurn[loc.row][loc.col] = -1;
+
+    grid[loc.row][loc.col].hasMoved = true;
 
 };
 
