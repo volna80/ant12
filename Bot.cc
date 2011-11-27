@@ -92,181 +92,14 @@ void Bot::updatePheromone()
 }
 
 
-vector<BattleArea> Bot::findBattles()
-{
-    //list of ants which aleady assign to any battle
-    vector<Location> inBattle;
-    vector<BattleArea> battles;
 
-    //define fighting groups\\
-    //vector<Location> copyAnts = vector<Location>(state.myAnts);
-    //vector<Location> copyAnts;
-    vector<Location> copyAnts(state.myAnts);
-
-    for(int ant=0; ant < (int) copyAnts.size(); ant++)
-    {
-        Location loc = copyAnts[ant];
-
-
-        //check that this ant isn't in any battle
-        if(inBattle.size() > 0)
-        {
-            vector<Location>::iterator it2 = std::find(inBattle.begin(), inBattle.end(), loc);
-            if(*it2 == loc)
-            {
-                //next
-                continue;
-            }
-        }
-
-        vector<Location> myAnts;
-        vector<Location> enemies;
-        bool hasEnemy = false;
-
-        //check the square
-        for(int r = -5; r <= 5; r++)
-        {
-            if(myAnts.size() == MAX_BATTLE_GROUP)
-            {
-                break;
-            }
-            for(int c = -5; c <= 5; c++)
-            {
-                if(r == 0 && c ==0)
-                {
-                    continue;
-                }
-                int n_row = (r + loc.row + state.rows) % state.rows;
-                int n_col = (c + loc.col + state.cols) % state.cols;
-
-                if(state.grid[n_row][n_col].ant > 0 )
-                {
-                    hasEnemy = true;
-                    enemies.push_back(Location(n_row, n_col));
-                }
-                else
-                {
-                    myAnts.push_back(Location(n_row,n_col));
-                }
-
-                if(myAnts.size() == MAX_BATTLE_GROUP)
-                {
-                    //it is enough for calculation
-                    break;
-                }
-
-            }
-        }
-
-        if(hasEnemy)
-        {
-            //create battle
-            BattleArea area;
-            //add you-self
-            myAnts.push_back(loc);
-
-            //check that ants not in another battle
-            for(int i=0; i < (int) myAnts.size(); i++)
-            {
-                Location loc2 = myAnts[i];
-                //if this ant in the state.myAnts. So, it hasn't been assigned to any battle
-                if(state.myAnts.size() > 0)
-                {
-                    vector<Location>::iterator it = find(state.myAnts.begin(), state.myAnts.end(), loc2);
-                    if(* it == loc2)
-                    {
-                        //add ants to the battle
-                        area.myAnts.push_back(loc2);
-                        //remove ants from state.myAnts
-                        state.myAnts.erase(it);
-                        //remember that this ant already is assigned to a battle
-                        inBattle.push_back(loc2);
-                    }
-                }
-
-            }
-
-            state.bug << "created a battle " << area << endl;
-            battles.push_back(area);
-
-        }
-    }
-    return battles;
-}
-
-
-void Bot::makeMoves(BattleArea area)
-{
-    state.bug << "move the battle[" << area << endl;
-    // -1 - stay on the same place
-    vector<int> steps = vector<int>(area.myAnts.size(), DONT_MOVE);
-    vector<int> best_step = steps;
-    int max_w = -100; //initial
-    bool lastTurn = false;
-    int combination = 0;
-    while( !lastTurn )
-    {
-        combination ++;
-        //state.bug << "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<" << endl;
-        //state.bug << "turn " << combination << endl;
-        //calculate current step
-        int cur_w = calculate_battle_result(area, steps);
-        //state.bug << "turn result " << cur_w << endl;
-
-        if(cur_w > max_w)
-        {
-            max_w = cur_w;
-            best_step = steps; //make a copy
-        }
-        //increment steps;
-        for(int j = 0; j < steps.size(); j++)
-        {
-            steps[j] = steps[j] + 1;
-
-            if(steps[j] > 3) //ok, go to next ant
-            {
-                if(j+1 == steps.size())
-                {
-                    //the end
-                    lastTurn = true;
-                    break;
-                }
-                else
-                {
-                    //return the init value and will increment next move;
-                    steps[j] = DONT_MOVE;
-                    continue;
-                }
-            }
-            else
-            {
-                break;
-            }
-        }
-    }
-
-    state.bug << "the result: " << max_w << endl;
-
-    //make moves;
-    for(int ant = 0; ant < area.myAnts.size(); ant++)
-    {
-        Location & loc = area.myAnts[ant];
-        int direction = best_step[ant];
-        if(direction == -1)
-        {
-            //do noting
-            continue;
-        }
-        state.bug << "ant[" << loc << "] move to [" << CDIRECTIONS[direction] << "]" << endl;
-        state.makeMove(loc, direction);
-    }
-}
 
 //makes the bots moves for the turn
 void Bot::makeMoves()
 {
 
     vector<BattleArea> battles = findBattles();
+    state.bug << "time taken(split grous)" << state.timer.getTime() << "ms" << endl << endl;
 
     //make moves of fighting groups first
     for(int i = 0 ; i < battles.size(); i++)
@@ -274,6 +107,7 @@ void Bot::makeMoves()
         BattleArea & area = battles[i];
         makeMoves(area);
     }
+    state.bug << "time taken(make battle moves): " << state.timer.getTime() << "ms" << endl << endl;
 
 
     //picks out moves for rest ants
@@ -291,7 +125,7 @@ void Bot::makeMoves()
             Location loc = state.getLocation(state.myAnts[ant], d);
             Square * square = &state.grid[loc.row][loc.col];
 
-            if(square->isWater || square->ant == 0 || (square->isHill && square->hillPlayer ==0) || square->isDeadlock == 1)
+            if(square->isWater || square->ant == 0 || (square->isHill && square->hillPlayer ==0) || square->isDeadlock == 1 || square->isFood)
             {
                 //state.bug << "couldn't move to " << d << endl;
                 //state.bug << "loc:" << loc.row << ":" << loc.col << "; w:" << square.isWater << "; h:" << square.isHill << "; a:" << square.ant << endl;
@@ -378,102 +212,7 @@ void Bot::makeMoves()
     state.bug << "time taken: " << state.timer.getTime() << "ms" << endl << endl;
 };
 
-int Bot::calculate_battle_result(const BattleArea &area, const vector<int> &steps)
-{
-    //state.bug << "calculate_battle_result() area=" << area << endl;
-    std::vector<std::vector<Square> > grid = state.grid; //make a copy
 
-    //make moves
-    for(int ant=0; ant < area.myAnts.size(); ant++)
-    {
-        const Location & loc = area.myAnts[ant];
-        int direction = steps[ant];
-        //state.bug << "ant[" << loc << "]; d=" << direction << endl;
-        if(direction == DONT_MOVE)
-        {
-            //do nothing
-        }
-        else
-        {
-            Location nLoc = state.getLocation(loc, direction);
-            Square & square = grid[nLoc.row][nLoc.col];
-            if(square.isWater || square.ant == 0 || square.isDeadlock == 1)
-            {
-                //state.bug << "impossible step";
-                return -10000000; //impossible step
-
-            }
-            grid[nLoc.row][nLoc.col].ant = grid[loc.row][loc.col].ant;
-            grid[loc.row][loc.col].ant = -1;
-        }
-    }
-
-    //calculate the battle result
-    int numMyDeadAnts = getNumberOfDeadAnts(area.myAnts, steps, grid);
-    int numEnemyDeadAnts = getNumberOfDeadAnts(area.enemy, steps, grid);
-    //state.bug << "start calculating the battle result" << endl;
-
-
-
-    return numEnemyDeadAnts - 2 * numMyDeadAnts; //So, I think 2 dead enemies vs 1 dead mine is a good result
-}
-
-int Bot::getNumberOfDeadAnts(vector<Location> myAnts, const vector<int> &steps, std::vector<std::vector<Square> > grid)
-{
-    int numDeadAnts = 0;
-    for(int ant=0; ant < myAnts.size(); ant++)
-    {
-        const Location &loc = myAnts[ant]; //TODO copy-past
-        int direction = steps[ant];
-        Location nLoc = state.getLocation(loc, direction);
-
-        // how to check if an ant dies
-        //for every ant:
-        //    for each enemy in range of ant (using attackadius2):
-        //        if (enemies(of ant) in range of ant) >= (enemies(of enemy) in range of enemy) then
-        //            the ant is marked dead (actual removal is done after all battles are resolved)
-        //            break out of enemy loop
-        //state.bug << "checking if an ant dies; ant[" << nLoc << endl;
-        vector<Location> enemies_v = enemies(nLoc, grid, grid[nLoc.row][nLoc.col].ant); //list of enemies for the ant
-        for(int enemy = 0; enemy < enemies_v.size(); enemy++)
-        {
-            Location & loc_enemy = enemies_v[enemy];
-            if(enemies_v.size() >= enemies(loc_enemy, grid, grid[loc_enemy.row][loc_enemy.col].ant).size())
-            {
-                //we dead
-                numDeadAnts ++;
-                break;
-            }
-
-        }
-    }
-    return numDeadAnts;
-
-}
-
-//return enemies in range of ant
-vector<Location> Bot::enemies(const Location &ant, const std::vector<std::vector<Square> > grid, int owner)
-{
-    vector<Location> e;
-    for(int r = -state.attackradius - 1; r < state.attackradius + 1; r++)
-    {
-        for(int c = -state.attackradius - 1; c < state.attackradius + 1; c++)
-        {
-            int enemy_row = (r + ant.row + state.rows) % state.rows;
-            int enemy_col = (c + ant.col + state.cols) % state.cols;
-            Location enemy(enemy_row, enemy_col);
-            if(
-                grid[enemy_row][enemy_col].ant != -1 &&
-                grid[enemy_row][enemy_col].ant != owner &&
-                state.distance(ant, enemy) <= (state.attackradius + 1))
-            {
-                //ok, it is ant, and it isn't our ant, and it in the attack radius
-                e.push_back(enemy);
-            }
-        }
-    }
-    return e;
-}
 
 int Bot::calcDesirability(const Location &current, int direction)
 {

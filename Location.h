@@ -1,6 +1,7 @@
 #ifndef LOCATION_H_
 #define LOCATION_H_
 
+#include <vector>
 #include "Bug.h"
 
 
@@ -34,6 +35,8 @@ struct Location
 
 
 };
+
+typedef std::vector<Location> ants_t;
 
 Bug& operator<<(Bug &os, const Location &state) ;
 

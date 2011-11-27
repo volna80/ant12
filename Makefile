@@ -1,7 +1,7 @@
 CC=g++
 CFLAGS=-O3 -funroll-loops -c -ggdb
 LDFLAGS=-O2 -lm
-SOURCES=Bot.cc MyBot.cc State.cc Order.cc PathUtils.cc
+SOURCES=Bot.cc MyBot.cc State.cc Order.cc PathUtils.cc BattleCalc.cc
 OBJECTS=$(SOURCES:.cc=.o)
 EXECUTABLE=MyBot
 

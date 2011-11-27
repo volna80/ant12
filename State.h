@@ -48,8 +48,8 @@ struct State
     bool gameover;
     long long seed;
 
-    std::vector<std::vector<Square> > grid;
-    std::vector<Location> myAnts, enemyAnts, myHills, enemyHills, food;
+    grid_t grid;
+    ants_t myAnts, enemyAnts, myHills, enemyHills, food;
 
     std::vector<std::vector<int> > lastTurn; //remember a last directrion
 
@@ -73,6 +73,9 @@ struct State
 
     void updateDeadlock();
     void updateVisionInformation();
+
+    //it returns all enemies in the attack range
+    void enemies(const Location &ant, grid_t & grid, int owner);
 };
 
 std::ostream& operator<<(std::ostream &os, const State &state);

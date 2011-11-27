@@ -131,6 +131,18 @@ void State::updateVisionInformation()
     //if((turn % 20 == 0) {
     updateDeadlock();
     //}
+
+    for(int a = 0; a <(int) myAnts.size(); a++)
+    {
+        Location &loc = myAnts[a];
+        enemies(loc, grid, 0);
+    }
+
+    for(int a = 0; a <(int) enemyAnts.size(); a++)
+    {
+        Location &loc = enemyAnts[a];
+        enemies(loc, grid, grid[loc.row][loc.col].ant);
+    }
 };
 
 

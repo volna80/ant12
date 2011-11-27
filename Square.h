@@ -2,6 +2,7 @@
 #define SQUARE_H_
 
 #include <vector>
+#include "Location.h"
 
 /*
     struct for representing a square in the grid.
@@ -20,6 +21,9 @@ struct Square
 
     double pheromone;
 
+    bool enemiesCached ;
+    ants_t listOfEnemies; //list of enemies in attack range
+
     Square()
     {
         isVisible = isWater = isHill = isFood = 0;
@@ -27,6 +31,7 @@ struct Square
         pheromone = 1;
         isLand = -1;
         isDeadlock = -1;
+        enemiesCached = false;
     };
 
     //resets the information for the square except water information
@@ -37,7 +42,11 @@ struct Square
         isFood = 0;
         ant = hillPlayer = -1;
         deadAnts.clear();
+        listOfEnemies.clear();
+        enemiesCached = false;
     };
 };
+
+typedef std::vector<std::vector<Square> > grid_t;
 
 #endif //SQUARE_H_

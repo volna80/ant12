@@ -7,8 +7,8 @@
 
 struct BattleArea
 {
-    std::vector<Location> myAnts;
-    std::vector<Location> enemy;
+    ants_t myAnts;
+    ants_t enemy;
 
 };
 
